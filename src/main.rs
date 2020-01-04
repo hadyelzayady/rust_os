@@ -6,9 +6,9 @@
 #![no_main]
 use core::panic::PanicInfo;
 
-#[panic_handler]
 // \! is the never return type to mark diverging function
 //panic info contains the file and line where the panic happened
+#[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
@@ -21,10 +21,19 @@ fn panic(_info: &PanicInfo) -> ! {
 //stack unwinding is complicated so we won't implement it, instead we disable it
 
 //to not change the name of exported function _start
-#[no_mangle]
 //extern "C" means use the C calling convention (calling a function in C pushes the address of current instruction and in called fn the ebp is pushed etc)
 
 //the start never returns because this is our os which is called by bootloader and the only way to exit is to shutdown the machine
+
+static HELLO: &[u8] = b"Hello World!";
+#[no_mangle]
 pub extern "C" fn _start() -> ! {
+    let vga_buffer_address = 0xb8000 as *mut u8;
+    for (i, &byte) in HELLO.iter().enumerate() {
+        unsafe {
+            *vga_buffer_address.offset(i as isize * 2) = byte;
+            *vga_buffer_address.offset(i as isize * 2 + 1) = 0xb;
+        }
+    }
     loop {}
 }
