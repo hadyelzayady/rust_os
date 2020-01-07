@@ -5,7 +5,7 @@
 //language item. but our freestanding executable does have access to crt0 so we have to define our entry point
 #![no_main]
 use core::panic::PanicInfo;
-
+mod vga_buffer;
 // \! is the never return type to mark diverging function
 //panic info contains the file and line where the panic happened
 #[panic_handler]
@@ -28,12 +28,14 @@ fn panic(_info: &PanicInfo) -> ! {
 static HELLO: &[u8] = b"Hello World!";
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer_address = 0xb8000 as *mut u8;
+    /* let vga_buffer_address = 0xb8000 as *mut u8;
     for (i, &byte) in HELLO.iter().enumerate() {
         unsafe {
             *vga_buffer_address.offset(i as isize * 2) = byte;
             *vga_buffer_address.offset(i as isize * 2 + 1) = 0xb;
         }
-    }
+    }*/
+    //write from vga_buffer module (just more modular code)
+    vga_buffer::print_something();
     loop {}
 }
