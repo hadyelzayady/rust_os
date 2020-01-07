@@ -79,6 +79,17 @@ impl Writer {
 		}
 	}
 
+	pub fn write_string(&mut self, s: &str) {
+		for byte in s.bytes() {
+			match byte {
+				//printable ASCII byte or newline
+				// | separates between multiple patterns to match
+				0x20..=0x7e | b'\n' => self.write_byte(byte),
+				_ => self.write_byte(0xfe),
+			}
+		}
+	}
+
 	fn new_line(&mut self) {}
 }
 
@@ -89,5 +100,5 @@ pub fn print_something() {
 		buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
 	};
 
-	writer.write_byte(b'H');
+	writer.write_string("Hello world");
 }
