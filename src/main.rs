@@ -25,17 +25,8 @@ fn panic(_info: &PanicInfo) -> ! {
 
 //the start never returns because this is our os which is called by bootloader and the only way to exit is to shutdown the machine
 
-static HELLO: &[u8] = b"Hello World!";
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    /* let vga_buffer_address = 0xb8000 as *mut u8;
-    for (i, &byte) in HELLO.iter().enumerate() {
-        unsafe {
-            *vga_buffer_address.offset(i as isize * 2) = byte;
-            *vga_buffer_address.offset(i as isize * 2 + 1) = 0xb;
-        }
-    }*/
-    //write from vga_buffer module (just more modular code)
     vga_buffer::print_something();
     loop {}
 }
