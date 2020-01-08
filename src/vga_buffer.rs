@@ -149,11 +149,37 @@ impl Writer {
 
 use core::fmt;
 //to use formatting macros we should implement Write trait which only contains method write_str
+//now we can use write! and
 impl fmt::Write for Writer {
+    //it takes self which means I can say WRITER.some_function_
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
     }
+}
+//copied from std then modified to use our writer
+#[macro_export]
+macro_rules! print {
+    //$crate (put the macro on the root of the crate) to be able to use the macro by writing use crate::print
+    //instead of crate::vga_buffer::print
+    ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    //$crate so if we want to use println without importing print
+    //ex if we don't use $crate we will have to write use crate::print and use crate::prinln as println uses print
+    //and we should tell rust which print to use
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+//doc(hidden) attribute to hide it from the generated documentation as this function should be private
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    //unwrap panics if error happens which won't ever happen as we always return ok(()) in write_str which is used by write_fmt
+    WRITER.lock().write_fmt(args).unwrap();
 }
 
 //* we can access writer directly from main as we made a global static instance of writer so we do not need have to use this function anymore

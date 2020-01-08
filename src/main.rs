@@ -9,7 +9,8 @@ mod vga_buffer;
 // \! is the never return type to mark diverging function
 //panic info contains the file and line where the panic happened
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
 
@@ -37,10 +38,23 @@ pub extern "C" fn _start() -> ! {
 
     write!(
         vga_buffer::WRITER.lock(),
-        "some numbers {} and {}",
+        "some numbers {} and {}\n",
         42,
         10 / 3
     )
     .unwrap();
+    //using the write_str direcly from fmt:write trait
+    //this confirms write! macro uses write_str
+    vga_buffer::WRITER
+        .lock()
+        .write_str("this is write_str\n")
+        .unwrap();
+
+    //use our custom println!
+    //as this is our crate we don't have to write use crate::println!
+    println!("Hello println {}", "!");
+    //test panic handler
+    panic!("Error hapenned");
+
     loop {}
 }
