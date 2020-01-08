@@ -27,6 +27,20 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    vga_buffer::print_something();
+    //after making static writer we can use writer directly from here(instead of carrying the instance around or call function print_something)
+    use core::fmt::Write;
+
+    vga_buffer::WRITER
+        .lock()
+        .write_str("hello again\n")
+        .unwrap();
+
+    write!(
+        vga_buffer::WRITER.lock(),
+        "some numbers {} and {}",
+        42,
+        10 / 3
+    )
+    .unwrap();
     loop {}
 }

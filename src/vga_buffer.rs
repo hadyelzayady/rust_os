@@ -66,6 +66,23 @@ pub struct Writer {
     buffer: &'static mut Buffer,
 }
 
+//* static and constant variables are initialized at compile time which means all its member should be initialized with constant value or function. ColorCode::new can be const function but the real problem happens with derefernce raw pointer
+//and this can not happen at compile time, so we use  crate lazy statics to initialize the static varialbe at first time of accessing it(hence in run time)
+
+//to make the writer available globally instead of carrying the instance  around
+use lazy_static::lazy_static;
+//to allow sync (thread safe write)use spinlock
+use spin::Mutex;
+
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        column_position: 0,
+        row_position: 0,
+        color_code: ColorCode::new(Color::Black, Color::White),
+        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+    });
+}
+
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
@@ -75,6 +92,7 @@ impl Writer {
                     self.new_line();
                 }
                 //after using volatile:Instead of a normal assignment using =, we're now using the write method. This guarantees that the compiler will never optimize away this write.
+                //bound checks are done by default in rust as we specified chars dimensions so no worries about writing outside the buffer
                 self.buffer.chars[self.row_position][self.column_position].write(ScreenChar {
                     ascii_character: byte,
                     color_code: self.color_code,
@@ -138,6 +156,7 @@ impl fmt::Write for Writer {
     }
 }
 
+//* we can access writer directly from main as we made a global static instance of writer so we do not need have to use this function anymore
 pub fn print_something() {
     let mut writer = Writer {
         column_position: 0,
